@@ -38,7 +38,7 @@ cargo build --release
 
 ## More information
 
-<!-- TODO: Link the postres initialization documentation here -->
+<!-- TODO: Link the postgres initialization documentation here -->
 An actual use case explanation of this tool can be found in the app-php-apache project [here]().
 
 
