@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.2.7", features = ["derive"] }
-glob = { version = "0.3.1" }
-rand = { version = "0.8.5" }
 csv = { version = "1.2.1" }
+glob = { version = "0.3.1" }
+itertools = { version = "0.10.5", features = ["use_std"] }
+rand = { version = "0.8.5" }
 serde = { version = "1.0.163", features = ["derive"] }

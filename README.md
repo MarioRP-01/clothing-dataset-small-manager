@@ -38,9 +38,7 @@ cargo build --release
 
 ## More information
 
-<!-- TODO: Link the postgres initialization documentation here -->
-An actual use case explanation of this tool can be found in the app-php-apache project [here]().
-
+An actual use case explanation of this tool can be found in this [repository](https://github.com/MarioRP-01/app-apache-php).
 
 ## References
 

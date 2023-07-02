@@ -1,15 +1,19 @@
-use std::env;
-use std::error::Error;
-use std::path::PathBuf;
-
-use clap::{Parser};
-use glob::glob;
-use serde::Serialize;
 use csv;
-
+use clap::Parser;
+use glob::glob;
+use itertools::Itertools;
 use rand::{
-    distributions::{Distribution, Standard},
+    distributions::{
+        Distribution,
+        Standard
+    },
     Rng,
+};
+use serde::Serialize;
+use std::{
+    env,
+    error::Error,
+    path::PathBuf
 };
 
 
@@ -67,9 +71,9 @@ impl Distribution<Size> for Standard {
 }
 
 #[derive(Debug, Serialize)]
-struct Row<'a> {
-    file_name: &'a str,
-    label: &'a str,
+struct Row {
+    file_name: String,
+    label: String,
     size: Size,
     kids: bool,
 }
@@ -99,21 +103,24 @@ fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
         .from_path(&destination.as_path())
         .unwrap();
 
-    glob(&pattern).unwrap().for_each(|path| {
-
-        let path: PathBuf = path.unwrap();
-        let row: Row = Row {
-            file_name: path.
-                file_name().unwrap().to_str().unwrap(),
-            label: path
-                .parent().unwrap()
-                .components()
-                .last().unwrap()
-                .as_os_str().to_str().unwrap(),
-            size: rand::random(),
-            kids: rand::random(),
-        };
-        
-        writer.serialize(row).unwrap();
-    });
+    glob(&pattern).unwrap()
+        .filter_map(|path| path.ok())
+        .unique_by(|path| {
+            path.file_name().unwrap().to_str().unwrap().to_owned().clone()
+        })
+        .map(|path| {
+            Row {
+                file_name: path.file_name().unwrap().to_str().unwrap().to_owned(),
+                label: path
+                    .parent().unwrap()
+                    .components()
+                    .last().unwrap()
+                    .as_os_str().to_str().unwrap().to_owned(),
+                size: rand::random(),
+                kids: rand::random(),
+            }
+        })
+        .for_each(|row|{
+            writer.serialize(row).unwrap();
+        });
 }
