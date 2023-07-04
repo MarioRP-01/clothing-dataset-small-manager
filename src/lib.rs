@@ -3,18 +3,11 @@ use git2::Repository;
 use glob::glob;
 use itertools::Itertools;
 use rand::{
-    distributions::{
-        Distribution,
-        Standard
-    },
+    distributions::{Distribution, Standard},
     Rng,
 };
 use serde::Serialize;
-use std::{
-    env,
-    error::Error,
-    path::PathBuf
-};
+use std::{env, error::Error, path::PathBuf};
 use tempfile::TempDir;
 
 const DATASET_URL: &str = "https://github.com/alexeygrigorev/clothing-dataset-small";
@@ -33,16 +26,14 @@ pub struct Config {
 
 impl Config {
     pub fn build() -> Result<Config, &'static str> {
-
         let cli = Cli::parse();
 
         let current_dir: PathBuf = match env::current_dir() {
             Ok(path) => path,
-            Err(_) => return Err("Could not get the current directory")
+            Err(_) => return Err("Could not get the current directory"),
         };
 
-        let mut destination = cli.destination
-            .unwrap_or(current_dir);
+        let mut destination = cli.destination.unwrap_or(current_dir);
 
         if !destination.is_file() {
             destination.push("data.csv");
@@ -60,7 +51,7 @@ impl Distribution<Size> for Standard {
             2 => Size::M,
             3 => Size::L,
             4 => Size::XL,
-            _ => panic!("Invalid size")
+            _ => panic!("Invalid size"),
         }
     }
 }
@@ -79,21 +70,17 @@ enum Size {
     S,
     M,
     L,
-    XL
+    XL,
 }
 
-pub fn run (config: Config) -> Result<(), Box<dyn Error>> {
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let temp_file = clone_repo_in_temp(DATASET_URL)?;
-    create_csv_from_directory(
-        temp_file.path().to_path_buf(),
-        config.destination
-    );
+    create_csv_from_directory(temp_file.path().to_path_buf(), config.destination);
 
     Ok(())
 }
 
 fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
-
     let origin = origin.into_os_string().into_string().unwrap();
 
     let pattern = format!("{}/**/*.jpg", origin);
@@ -103,24 +90,26 @@ fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
         .from_path(destination.as_path())
         .unwrap();
 
-    glob(&pattern).unwrap()
+    glob(&pattern)
+        .unwrap()
         .filter_map(|path| path.ok())
-        .unique_by(|path| {
-            path.file_name().unwrap().to_str().unwrap().to_owned()
+        .unique_by(|path| path.file_name().unwrap().to_str().unwrap().to_owned())
+        .map(|path| Row {
+            file_name: path.file_name().unwrap().to_str().unwrap().to_owned(),
+            label: path
+                .parent()
+                .unwrap()
+                .components()
+                .last()
+                .unwrap()
+                .as_os_str()
+                .to_str()
+                .unwrap()
+                .to_owned(),
+            size: rand::random(),
+            kids: rand::random(),
         })
-        .map(|path| {
-            Row {
-                file_name: path.file_name().unwrap().to_str().unwrap().to_owned(),
-                label: path
-                    .parent().unwrap()
-                    .components()
-                    .last().unwrap()
-                    .as_os_str().to_str().unwrap().to_owned(),
-                size: rand::random(),
-                kids: rand::random(),
-            }
-        })
-        .for_each(|row|{
+        .for_each(|row| {
             writer.serialize(row).unwrap();
         });
 }

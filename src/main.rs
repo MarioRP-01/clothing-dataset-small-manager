@@ -1,6 +1,6 @@
 use std::process;
 
-fn main() {    
+fn main() {
     let config = dataset_manager::Config::build().unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {err}");
         process::exit(1);
@@ -13,6 +13,4 @@ fn main() {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}
