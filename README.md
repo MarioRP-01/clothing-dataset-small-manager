@@ -22,6 +22,20 @@ If you want to pass arguments, it's possible to add them using `--`:
 cargo run -- --help
 ```
 
+### Formatting and Linting
+
+To format the code, run the following command:
+
+```shell
+cargo fmt
+```
+
+To lint the code, run the following command:
+
+```shell
+cargo clippy
+```
+
 ## Release
 
 To build the release version of the cli tool, run the following command:
