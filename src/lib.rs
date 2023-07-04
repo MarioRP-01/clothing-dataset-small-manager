@@ -1,5 +1,5 @@
-use csv;
 use clap::Parser;
+use git2::Repository;
 use glob::glob;
 use itertools::Itertools;
 use rand::{
@@ -15,21 +15,19 @@ use std::{
     error::Error,
     path::PathBuf
 };
+use tempfile::TempDir;
 
+const DATASET_URL: &str = "https://github.com/alexeygrigorev/clothing-dataset-small";
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct Cli {
     #[arg(short, long)]
-    origin: Option<PathBuf>,
-
-    #[arg(short, long)]
     destination: Option<PathBuf>,
 }
 
 pub struct Config {
-    origin: PathBuf,
     destination: PathBuf,
 }
 
@@ -43,9 +41,6 @@ impl Config {
             Err(_) => return Err("Could not get the current directory")
         };
 
-        let origin = cli.origin
-            .unwrap_or(current_dir.clone());
-
         let mut destination = cli.destination
             .unwrap_or(current_dir);
 
@@ -53,7 +48,7 @@ impl Config {
             destination.push("data.csv");
         }
 
-        Ok(Config { origin, destination })
+        Ok(Config { destination })
     }
 }
 
@@ -88,7 +83,12 @@ enum Size {
 }
 
 pub fn run (config: Config) -> Result<(), Box<dyn Error>> {
-    create_csv_from_directory(config.origin, config.destination);
+    let temp_file = clone_repo_in_temp(DATASET_URL)?;
+    create_csv_from_directory(
+        temp_file.path().to_path_buf(),
+        config.destination
+    );
+
     Ok(())
 }
 
@@ -100,13 +100,13 @@ fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
 
     let mut writer = csv::WriterBuilder::new()
         .has_headers(true)
-        .from_path(&destination.as_path())
+        .from_path(destination.as_path())
         .unwrap();
 
     glob(&pattern).unwrap()
         .filter_map(|path| path.ok())
         .unique_by(|path| {
-            path.file_name().unwrap().to_str().unwrap().to_owned().clone()
+            path.file_name().unwrap().to_str().unwrap().to_owned()
         })
         .map(|path| {
             Row {
@@ -123,4 +123,11 @@ fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
         .for_each(|row|{
             writer.serialize(row).unwrap();
         });
+}
+
+fn clone_repo_in_temp(url: &str) -> Result<TempDir, Box<dyn std::error::Error>> {
+    let temp_file = TempDir::new()?;
+    Repository::clone(url, &temp_file)?;
+
+    Ok(temp_file)
 }
