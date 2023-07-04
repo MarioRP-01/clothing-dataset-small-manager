@@ -6,23 +6,17 @@ All the commands are strongly attached to the directory structure of the reposit
 
 ## Pre-requisites
 
-- Clone the clothing-dataset-small from the original [repository](https://github.com/alexeygrigorev/clothing-dataset-small).
-
-    ```bash
-    git clone https://github.com/alexeygrigorev/clothing-dataset-small
-    ```
-
-- Have a postgres database running.
+Before start, you should have **Rust** [installed](https://doc.rust-lang.org/book/ch01-01-installation.html) in your machine. Alternatively, you can create a docker container to compile the application inside it, although currently the repository does not have a Dockerfile to do that.
 
 ## Development
 
-Run the cli tool with the following command:
+Execute the application with following command:
 
 ```shell
-cargo run --
+cargo run
 ```
 
-After the `--` you can pass the arguments to the cli tool. For example:
+If you want to pass arguments, it's possible to add them using `--`:
 
 ```shell
 cargo run -- --help
@@ -44,3 +38,4 @@ An actual use case explanation of this tool can be found in this [repository](ht
 
 - [Random value from enum](https://stackoverflow.com/a/48491021)
 - [OsString in Rust](https://doc.rust-lang.org/std/ffi/struct.OsString.html)
+- [Use google distroless images](https://github.com/GoogleContainerTools/distroless/blob/main/examples/rust/Dockerfile)
