@@ -7,7 +7,7 @@ use rand::{
     Rng,
 };
 use serde::Serialize;
-use std::{env, error::Error, path::PathBuf};
+use std::{env, error::Error, fs, path::PathBuf};
 use tempfile::TempDir;
 
 const DATASET_URL: &str = "https://github.com/alexeygrigorev/clothing-dataset-small";
@@ -33,10 +33,10 @@ impl Config {
             Err(_) => return Err("Could not get the current directory"),
         };
 
-        let mut destination = cli.destination.unwrap_or(current_dir);
+        let destination = cli.destination.unwrap_or(current_dir);
 
-        if !destination.is_file() {
-            destination.push("data.csv");
+        if !destination.is_dir() {
+            return Err("Destination must be a directory");
         }
 
         Ok(Config { destination })
@@ -75,25 +75,36 @@ enum Size {
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let temp_file = clone_repo_in_temp(DATASET_URL)?;
-    create_csv_from_directory(temp_file.path().to_path_buf(), config.destination);
+    extract_dataset(temp_file.path().to_path_buf(), config.destination)?;
 
     Ok(())
 }
 
-fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
-    let origin = origin.into_os_string().into_string().unwrap();
+/**
+ * Creates a CSV file from clothing-dataset-small directory and create a new directory for the images.
+ */
+fn extract_dataset(dataset: PathBuf, destination: PathBuf) -> Result<(), Box<dyn Error>> {
+    // let origin = origin.into_os_string().into_string().unwrap();
+    let dataset = dataset.into_os_string().into_string().unwrap();
+    let pattern = format!("{}/**/*.jpg", dataset);
 
-    let pattern = format!("{}/**/*.jpg", origin);
-
+    let csv_file = destination.clone().join("data.csv");
     let mut writer = csv::WriterBuilder::new()
         .has_headers(true)
-        .from_path(destination.as_path())
-        .unwrap();
+        .from_path(csv_file.as_path())?;
+
+    let images_dir = destination.join("images");
+
+    fs::create_dir_all(&images_dir).unwrap();
 
     glob(&pattern)
         .unwrap()
         .filter_map(|path| path.ok())
         .unique_by(|path| path.file_name().unwrap().to_str().unwrap().to_owned())
+        .inspect(|path| {
+            let file_name = path.file_name().unwrap().to_str().unwrap();
+            fs::copy(path, images_dir.clone().join(file_name)).unwrap();
+        })
         .map(|path| Row {
             file_name: path.file_name().unwrap().to_str().unwrap().to_owned(),
             label: path
@@ -112,11 +123,12 @@ fn create_csv_from_directory(origin: PathBuf, destination: PathBuf) {
         .for_each(|row| {
             writer.serialize(row).unwrap();
         });
+
+        Ok(())
 }
 
 fn clone_repo_in_temp(url: &str) -> Result<TempDir, Box<dyn std::error::Error>> {
     let temp_file = TempDir::new()?;
     Repository::clone(url, &temp_file)?;
-
     Ok(temp_file)
 }

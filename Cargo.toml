@@ -2,7 +2,6 @@
 name = "dataset-manager"
 version = "0.1.0"
 authors = ["Mario Rojas"]
-about = "A tool to manage datasets"
 edition = "2021"
 
 [dependencies]
