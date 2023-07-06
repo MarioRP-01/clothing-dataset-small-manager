@@ -17,29 +17,52 @@ const DATASET_URL: &str = "https://github.com/alexeygrigorev/clothing-dataset-sm
 #[command(propagate_version = true)]
 pub struct Cli {
     #[arg(short, long)]
+    origin: Option<PathBuf>,
+
+    #[arg(short, long)]
     destination: Option<PathBuf>,
 }
 
 pub struct Config {
+    origin: Option<PathBuf>,
     destination: PathBuf,
 }
 
 impl Config {
-    pub fn build() -> Result<Config, &'static str> {
+    pub fn build() -> Result<Config, Box<dyn Error>> {
         let cli = Cli::parse();
 
         let current_dir: PathBuf = match env::current_dir() {
             Ok(path) => path,
-            Err(_) => return Err("Could not get the current directory"),
+            Err(_) => return Err("Could not get the current directory".into()),
         };
 
-        let destination = cli.destination.unwrap_or(current_dir);
+        let destination = match cli.destination {
+            Some(path) => match path.is_dir() {
+                true => path,
+                false => return Err("Destination must be a directory".into()),
+            }
+            None => current_dir,
+        };
 
-        if !destination.is_dir() {
-            return Err("Destination must be a directory");
+        if !destination.read_dir()?.next().is_none() {
+            return Err("Destination must be an empty directory".into());
         }
 
-        Ok(Config { destination })
+        let origin =
+            match cli.origin {
+                Some(path) => match path.is_dir() {
+                    true => Some(path),
+                    false => return Err("Origin must be a directory".into()),
+                },
+                None => None
+            };
+
+        if !destination.is_dir() {
+            return Err("Destination must be a directory".into());
+        }
+
+        Ok(Config { origin, destination })
     }
 }
 
@@ -74,8 +97,18 @@ enum Size {
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let temp_file = clone_repo_in_temp(DATASET_URL)?;
-    extract_dataset(temp_file.path().to_path_buf(), config.destination)?;
+
+    let temp_file;
+
+    let origin = match config.origin {
+        Some(path) => path,
+        None => {
+            temp_file = clone_repo_in_temp(DATASET_URL)?;
+            temp_file.path().to_path_buf()
+        }
+    };
+
+    extract_dataset(origin, config.destination)?;
 
     Ok(())
 }
