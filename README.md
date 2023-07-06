@@ -53,3 +53,8 @@ An actual use case explanation of this tool can be found in this [repository](ht
 - [Random value from enum](https://stackoverflow.com/a/48491021)
 - [OsString in Rust](https://doc.rust-lang.org/std/ffi/struct.OsString.html)
 - [Use google distroless images](https://github.com/GoogleContainerTools/distroless/blob/main/examples/rust/Dockerfile)
+
+## Docker
+
+- [How to create small Docker images for Rust](https://kerkour.com/rust-small-docker-image)
+- [Fix openSSL error](https://stackoverflow.com/a/75834695)
