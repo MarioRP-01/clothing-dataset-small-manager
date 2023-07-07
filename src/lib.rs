@@ -38,16 +38,14 @@ impl Config {
             Err(_) => return Err("Could not get the current directory".into()),
         };
 
-        let destination = match cli.destination {
-            Some(path) => match path.is_dir() {
-                true => path,
-                false => return Err("Destination must be a directory".into()),
-            }
-            None => current_dir,
-        };
+        let destination = cli.destination.unwrap_or_else(|| current_dir);
+
+        if !destination.is_dir() {
+            return Err("Destination must be an existing empty directory".into());
+        }
 
         if !destination.read_dir()?.next().is_none() {
-            return Err("Destination must be an empty directory".into());
+            return Err("Destination must be an existing empty directory".into());
         }
 
         let origin =
@@ -58,11 +56,7 @@ impl Config {
                 },
                 None => None
             };
-
-        if !destination.is_dir() {
-            return Err("Destination must be a directory".into());
-        }
-
+        
         Ok(Config { origin, destination })
     }
 }

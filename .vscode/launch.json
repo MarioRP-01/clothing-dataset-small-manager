@@ -59,6 +59,29 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug with parameters 'dataset-manager'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=dataset-manager",
+                    "--package=dataset-manager"
+                ],
+                "filter": {
+                    "name": "dataset-manager",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-o",
+                "clothing-dataset-small",
+                "-d",
+                "none"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
     ]
 }
