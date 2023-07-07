@@ -10,8 +10,8 @@ function build_docker_image {
 # Function to run container with dataset in local folder
 function run_local_dataset {
     docker run -it --rm \
-        -v $(pwd)/clothing-dataset-small:/clothing-dataset-small \
-        -v $(pwd)/data:/data \
+        -v $(pwd)/clothing-dataset-small:/clothing-dataset-small:ro \
+        -v $(pwd)/data:/data:rw \
         -u $(id -u):$(id -g) \
         dataset-manager:latest \
         dataset-manager -o clothing-dataset-small -d data
@@ -20,7 +20,7 @@ function run_local_dataset {
 # Function to run container with dataset downloaded from repository
 function run_downloaded_dataset {
     docker run -it --rm \
-        -v $(pwd)/data:/data \
+        -v $(pwd)/data:/data:rw \
         -u $(id -u):$(id -g) \
         dataset-manager:latest \
         dataset-manager -d data
