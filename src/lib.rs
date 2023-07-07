@@ -122,6 +122,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     })?;
 
     throbber.success("Repository extracted successfully".to_string());
+    throbber.end();
 
     Ok(())
 }
