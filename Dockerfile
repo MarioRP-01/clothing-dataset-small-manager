@@ -1,9 +1,7 @@
 # Build stage
-FROM rust:1.68-alpine as builder
+FROM rust:1.68-alpine3.17 as builder
 
-RUN rustup target add x86_64-unknown-linux-musl
 RUN apk add openssl-dev musl-dev
-RUN update-ca-certificates
 
 # Create App User
 ENV USER=dataset-manager
@@ -24,7 +22,7 @@ COPY . /app
 RUN cargo build --release
 
 # Prod stage
-FROM alpine:latest
+FROM alpine:3.17
 
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
