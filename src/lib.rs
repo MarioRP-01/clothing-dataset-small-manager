@@ -9,6 +9,7 @@ use rand::{
 use serde::Serialize;
 use std::{env, error::Error, fs, path::PathBuf};
 use tempfile::TempDir;
+use throbber::Throbber;
 
 const DATASET_URL: &str = "https://github.com/alexeygrigorev/clothing-dataset-small";
 
@@ -99,16 +100,28 @@ enum Size {
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     let temp_file;
+    let mut throbber = Throbber::new();
 
     let origin = match config.origin {
         Some(path) => path,
         None => {
-            temp_file = clone_repo_in_temp(DATASET_URL)?;
+            throbber.start_with_msg("Cloning the repository...".to_string());
+            temp_file = clone_repo_in_temp(DATASET_URL).or_else(|error| {
+                throbber.fail("Could not clone the repository".to_string());
+                Err(error)
+            })?;
+            throbber.success("Repository cloned successfully".to_string());
             temp_file.path().to_path_buf()
         }
     };
 
-    extract_dataset(origin, config.destination)?;
+    throbber.start_with_msg("Extracting the dataset...".to_string());
+    extract_dataset(origin, config.destination).or_else(|error| {
+        throbber.fail("Could not extract the dataset".to_string());
+        Err(error)
+    })?;
+
+    throbber.success("Repository extracted successfully".to_string());
 
     Ok(())
 }
@@ -117,7 +130,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
  * Creates a CSV file from clothing-dataset-small directory and create a new directory for the images.
  */
 fn extract_dataset(dataset: PathBuf, destination: PathBuf) -> Result<(), Box<dyn Error>> {
-    // let origin = origin.into_os_string().into_string().unwrap();
+
     let dataset = dataset.into_os_string().into_string().unwrap();
     let pattern = format!("{}/**/*.jpg", dataset);
 

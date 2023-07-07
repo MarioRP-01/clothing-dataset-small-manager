@@ -13,3 +13,4 @@ itertools = { version = "0.11", features = ["use_std"] }
 rand = { version = "0.8.5" }
 serde = { version = "1.0.163", features = ["derive"] }
 tempfile = { version = "3.6.0" }
+throbber = { version = "0.1.4" }
