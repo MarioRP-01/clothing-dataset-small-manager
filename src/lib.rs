@@ -38,13 +38,13 @@ impl Config {
             Err(_) => return Err("Could not get the current directory".into()),
         };
 
-        let destination = cli.destination.unwrap_or_else(|| current_dir);
+        let destination = cli.destination.unwrap_or(current_dir);
 
         if !destination.is_dir() {
             return Err("Destination must be an existing empty directory".into());
         }
 
-        if !destination.read_dir()?.next().is_none() {
+        if destination.read_dir()?.next().is_some() {
             return Err("Destination must be an existing empty directory".into());
         }
 
@@ -100,9 +100,9 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         Some(path) => path,
         None => {
             throbber.start_with_msg("Cloning the repository...".to_string());
-            temp_file = clone_repo_in_temp(DATASET_URL).or_else(|error| {
+            temp_file = clone_repo_in_temp(DATASET_URL).map_err(|error| {
                 throbber.fail("Could not clone the repository".to_string());
-                Err(error)
+                error
             })?;
             throbber.success("Repository cloned successfully".to_string());
             temp_file.path().to_path_buf()
@@ -110,9 +110,9 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     };
 
     throbber.start_with_msg("Extracting the dataset...".to_string());
-    extract_dataset(origin, config.destination).or_else(|error| {
+    extract_dataset(origin, config.destination).map_err(|error| {
         throbber.fail("Could not extract the dataset".to_string());
-        Err(error)
+        error
     })?;
 
     throbber.success("Repository extracted successfully".to_string());
@@ -129,7 +129,7 @@ fn extract_dataset(dataset: PathBuf, destination: PathBuf) -> Result<(), Box<dyn
     let dataset = dataset.into_os_string().into_string().unwrap();
     let pattern = format!("{}/**/*.jpg", dataset);
 
-    let csv_file = destination.clone().join("data.csv");
+    let csv_file = destination.join("data.csv");
     let mut writer = csv::WriterBuilder::new()
         .has_headers(true)
         .from_path(csv_file.as_path())?;
