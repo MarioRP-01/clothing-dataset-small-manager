@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::{fs::File, io::Write, path::Path};
 use reqwest::{Url, header};
 use tempfile::TempDir;
@@ -12,20 +10,14 @@ const GITHUB_API_URL: &str = "https://api.github.com";
 
 pub enum CompressionType {
     Tarball,
-    Zipball
 }
 
 impl ToString for CompressionType {
     fn to_string(&self) -> String {
         match self {
             CompressionType::Tarball => "tarball".to_owned(),
-            CompressionType::Zipball => "zipball".to_owned()
         }
     }
-}
-
-struct GitHubBlockingClient {
-    client: reqwest::blocking::Client
 }
 
 pub fn build_github_blocking_client() -> Result<reqwest::blocking::Client, Box<dyn std::error::Error>> {
