@@ -7,10 +7,12 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.2.7", features = ["derive"] }
 csv = { version = "1.2.1" }
-git2 = { version = "0.17.2" }
+flate2 = "1.0.27"
 glob = { version = "0.3.1" }
 itertools = { version = "0.11", features = ["use_std"] }
 rand = { version = "0.8.5" }
+reqwest = { version = "0.11.20", features = ["blocking"] }
 serde = { version = "1.0.163", features = ["derive"] }
+tar = "0.4.40"
 tempfile = { version = "3.6.0" }
 throbber = { version = "0.1.4" }

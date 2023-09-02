@@ -1,5 +1,7 @@
+mod github_api;
+
 use clap::Parser;
-use git2::Repository;
+use github_api::CompressionType;
 use glob::glob;
 use itertools::Itertools;
 use rand::{
@@ -8,10 +10,12 @@ use rand::{
 };
 use serde::Serialize;
 use std::{env, error::Error, fs, path::PathBuf};
-use tempfile::TempDir;
 use throbber::Throbber;
 
-const DATASET_URL: &str = "https://github.com/alexeygrigorev/clothing-dataset-small";
+const REPOSITORY_AUTHOR: &str = "alexeygrigorev";
+const REPOSITORY_NAME: &str = "clothing-dataset-small";
+const REPOSITORY_BRANCH: &str = "master";
+const REPOSITORY_COMPRESSION_TYPE: CompressionType = CompressionType::Tarball;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -100,16 +104,25 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         Some(path) => path,
         None => {
             throbber.start_with_msg("Cloning the repository...".to_string());
-            temp_file = clone_repo_in_temp(DATASET_URL).map_err(|error| {
-                throbber.fail("Could not clone the repository".to_string());
-                error
-            })?;
+
+            temp_file = github_api::download_repository_into_temp(
+                REPOSITORY_AUTHOR,
+                REPOSITORY_NAME,
+                REPOSITORY_COMPRESSION_TYPE,
+                REPOSITORY_BRANCH
+            ).map_err(|error| {
+                    throbber.fail("Could not clone the repository".to_string());
+                    error
+                })?;
+
             throbber.success("Repository cloned successfully".to_string());
+
             temp_file.path().to_path_buf()
         }
     };
 
     throbber.start_with_msg("Extracting the dataset...".to_string());
+
     extract_dataset(origin, config.destination).map_err(|error| {
         throbber.fail("Could not extract the dataset".to_string());
         error
@@ -166,10 +179,4 @@ fn extract_dataset(dataset: PathBuf, destination: PathBuf) -> Result<(), Box<dyn
         });
 
         Ok(())
-}
-
-fn clone_repo_in_temp(url: &str) -> Result<TempDir, Box<dyn std::error::Error>> {
-    let temp_file = TempDir::new()?;
-    Repository::clone(url, &temp_file)?;
-    Ok(temp_file)
 }
