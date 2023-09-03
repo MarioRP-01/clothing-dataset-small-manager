@@ -9,8 +9,8 @@ clap = { version = "4.2.7", features = ["derive"] }
 csv = { version = "1.2.1" }
 flate2 = "1.0.27"
 glob = { version = "0.3.1" }
-itertools = { version = "0.11", features = ["use_std"] }
 rand = { version = "0.8.5" }
+rayon = "1.7.0"
 reqwest = { version = "0.11.20", features = ["blocking"] }
 serde = { version = "1.0.163", features = ["derive"] }
 tar = "0.4.40"

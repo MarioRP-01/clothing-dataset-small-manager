@@ -4,9 +4,7 @@ use tempfile::TempDir;
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-
 const GITHUB_API_URL: &str = "https://api.github.com";
-
 
 pub enum CompressionType {
     Tarball,

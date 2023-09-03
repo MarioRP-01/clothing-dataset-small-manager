@@ -1,15 +1,9 @@
 mod github_api;
+mod clothings;
 
 use clap::Parser;
 use github_api::CompressionType;
-use glob::glob;
-use itertools::Itertools;
-use rand::{
-    distributions::{Distribution, Standard},
-    Rng,
-};
-use serde::Serialize;
-use std::{env, error::Error, fs, path::PathBuf};
+use std::{env, error::Error, path::PathBuf};
 use throbber::Throbber;
 
 const REPOSITORY_AUTHOR: &str = "alexeygrigorev";
@@ -65,36 +59,6 @@ impl Config {
     }
 }
 
-impl Distribution<Size> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Size {
-        match rng.gen_range(0..=4) {
-            0 => Size::XS,
-            1 => Size::S,
-            2 => Size::M,
-            3 => Size::L,
-            4 => Size::XL,
-            _ => panic!("Invalid size"),
-        }
-    }
-}
-
-#[derive(Debug, Serialize)]
-struct Row {
-    file_name: String,
-    label: String,
-    size: Size,
-    kids: bool,
-}
-
-#[derive(Debug, Serialize)]
-enum Size {
-    XS,
-    S,
-    M,
-    L,
-    XL,
-}
-
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     let temp_file;
@@ -123,7 +87,10 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     throbber.start_with_msg("Extracting the dataset...".to_string());
 
-    extract_dataset(origin, config.destination).map_err(|error| {
+    clothings::extract_dataset_from_path(
+        Box::new(origin), 
+        Box::new(config.destination)
+    ).map_err(|error| {
         throbber.fail("Could not extract the dataset".to_string());
         error
     })?;
@@ -132,51 +99,4 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     throbber.end();
 
     Ok(())
-}
-
-/**
- * Creates a CSV file from clothing-dataset-small directory and create a new directory for the images.
- */
-fn extract_dataset(dataset: PathBuf, destination: PathBuf) -> Result<(), Box<dyn Error>> {
-
-    let dataset = dataset.into_os_string().into_string().unwrap();
-    let pattern = format!("{}/**/*.jpg", dataset);
-
-    let csv_file = destination.join("data.csv");
-    let mut writer = csv::WriterBuilder::new()
-        .has_headers(true)
-        .from_path(csv_file.as_path())?;
-
-    let images_dir = destination.join("images");
-
-    fs::create_dir_all(&images_dir).unwrap();
-
-    glob(&pattern)
-        .unwrap()
-        .filter_map(|path| path.ok())
-        .unique_by(|path| path.file_name().unwrap().to_str().unwrap().to_owned())
-        .inspect(|path| {
-            let file_name = path.file_name().unwrap().to_str().unwrap();
-            fs::copy(path, images_dir.clone().join(file_name)).unwrap();
-        })
-        .map(|path| Row {
-            file_name: path.file_name().unwrap().to_str().unwrap().to_owned(),
-            label: path
-                .parent()
-                .unwrap()
-                .components()
-                .last()
-                .unwrap()
-                .as_os_str()
-                .to_str()
-                .unwrap()
-                .to_owned(),
-            size: rand::random(),
-            kids: rand::random(),
-        })
-        .for_each(|row| {
-            writer.serialize(row).unwrap();
-        });
-
-        Ok(())
 }
