@@ -1,5 +1,5 @@
 use glob::glob;
-use std::{path::{PathBuf, Path}, fs, sync::{Arc, Mutex}};
+use std::{path::Path, fs, sync::{Arc, Mutex}};
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
@@ -9,16 +9,18 @@ use serde::Serialize;
 
 /// Clothing item.
 #[derive(Debug, Serialize)]
-struct Clothing {
-    file_name: String,
+pub(crate) struct Clothing {
+    uuid: String,
     label: String,
     size: Size,
     kids: bool,
 }
 
 impl Clothing {
-    pub fn build_from_path(path: PathBuf) -> Result<Clothing, Box<dyn std::error::Error>> {
+    pub fn build_from_path(path: Box<dyn AsRef<Path>>) -> Result<Clothing, Box<dyn std::error::Error>> {
         
+        let path = path.as_ref().as_ref();
+
         let file_name = path.file_stem().ok_or("File name not found")?
             .to_owned().into_string().unwrap_or("Cannot convert file name to string".to_owned());
         
@@ -28,7 +30,7 @@ impl Clothing {
             .into_string().unwrap_or("Cannot convert parent directory to string".to_owned());
 
         Ok(Clothing {
-            file_name,
+            uuid: file_name,
             label,
             size: Size::random(),
             kids: rand::random(),
@@ -38,7 +40,7 @@ impl Clothing {
 
 /// Clothing size.
 #[derive(Debug, Serialize)]
-enum Size {
+pub(crate) enum Size {
     XS,
     S,
     M,
@@ -47,7 +49,7 @@ enum Size {
 }
 
 impl Size {
-    fn random() -> Self {
+    pub(crate) fn random() -> Self {
         rand::random()
     }
 }
@@ -94,7 +96,7 @@ pub fn extract_dataset_from_path(
             fs::copy(path, images_dir.clone().join(file_name)).unwrap();
         })
         .filter_map(|path|
-            Clothing::build_from_path(path).ok()
+            Clothing::build_from_path(Box::new(path)).ok()
         )
         .for_each(|row| {
             csv_writer.lock().unwrap().serialize(row).unwrap();
@@ -106,6 +108,7 @@ pub fn extract_dataset_from_path(
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
     use tempfile::TempDir;
 
     use super::*;
@@ -117,10 +120,10 @@ mod tests {
             .join("jeans")
             .join("00000000.jpg");
 
-        let clothing = Clothing::build_from_path(path).unwrap();
+        let clothing = Clothing::build_from_path(Box::new(path)).unwrap();
 
         assert_eq!(clothing.label, "jeans");
-        assert_eq!(clothing.file_name, "00000000.jpg");
+        assert_eq!(clothing.uuid, "00000000");
     }
 
     #[test]
