@@ -10,10 +10,10 @@ use serde::Serialize;
 /// Clothing item.
 #[derive(Debug, Serialize)]
 pub(crate) struct Clothing {
-    uuid: String,
-    label: String,
-    size: Size,
-    kids: bool,
+    pub uuid: Arc<str>,
+    pub label: Arc<str>,
+    pub size: Size,
+    pub kids: bool,
 }
 
 impl Clothing {
@@ -30,8 +30,8 @@ impl Clothing {
             .into_string().unwrap_or("Cannot convert parent directory to string".to_owned());
 
         Ok(Clothing {
-            uuid: file_name,
-            label,
+            uuid: file_name.into(),
+            label: label.into(),
             size: Size::random(),
             kids: rand::random(),
         })
@@ -108,7 +108,7 @@ pub fn extract_dataset_from_path(
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::{path::PathBuf, ops::Deref};
     use tempfile::TempDir;
 
     use super::*;
@@ -122,8 +122,8 @@ mod tests {
 
         let clothing = Clothing::build_from_path(Box::new(path)).unwrap();
 
-        assert_eq!(clothing.label, "jeans");
-        assert_eq!(clothing.uuid, "00000000");
+        assert_eq!(clothing.label.deref(), "jeans");
+        assert_eq!(clothing.uuid.deref(), "00000000");
     }
 
     #[test]
