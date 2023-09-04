@@ -66,7 +66,7 @@ impl Distribution<Size> for Standard {
 }
 
 /// Given the clothing-dataset-small directory, extract the dataset into the destination 
-/// creating a .
+/// creating a csv with the directory information.
 pub fn extract_dataset_from_path(
     dataset: Box<dyn AsRef<Path>>,  
     destination: Box<dyn AsRef<Path>>
