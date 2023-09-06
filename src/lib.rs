@@ -1,4 +1,5 @@
 mod config;
+mod extended_clothings;
 mod github_api;
 mod clothings;
 

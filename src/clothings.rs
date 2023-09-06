@@ -5,10 +5,10 @@ use rand::{
     Rng,
 };
 use rayon::prelude::*;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 /// Clothing item.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Clothing {
     pub uuid: Arc<str>,
     pub label: Arc<str>,
@@ -39,7 +39,7 @@ impl Clothing {
 }
 
 /// Clothing size.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub(crate) enum Size {
     XS,
     S,
@@ -101,7 +101,6 @@ pub fn extract_dataset_from_path(
         .for_each(|row| {
             csv_writer.lock().unwrap().serialize(row).unwrap();
         });
-
 
     Ok(())
 }
