@@ -1,4 +1,5 @@
 use std::{fs::File, io::Write, path::Path};
+use std::fmt::Display;
 use reqwest::{Url, header};
 use tempfile::TempDir;
 use flate2::read::GzDecoder;
@@ -10,11 +11,11 @@ pub enum CompressionType {
     Tarball,
 }
 
-impl ToString for CompressionType {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for CompressionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
             CompressionType::Tarball => "tarball".to_owned(),
-        }
+        })
     }
 }
 
