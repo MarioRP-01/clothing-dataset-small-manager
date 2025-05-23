@@ -28,10 +28,9 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                 REPOSITORY_NAME,
                 REPOSITORY_COMPRESSION_TYPE,
                 REPOSITORY_BRANCH
-            ).map_err(|error| {
-                    throbber.fail("Could not clone the repository".to_string());
-                    error
-                })?;
+            ).inspect_err(|_error| {
+                throbber.fail("Could not clone the repository".to_string());
+            })?;
 
             throbber.success("Repository cloned successfully".to_string());
 
@@ -39,17 +38,33 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    throbber.start_with_msg("Extracting the dataset...".to_string());
+    {
+        throbber.start_with_msg("Extracting the dataset...".to_string());
 
-    clothings::extract_dataset_from_path(
-        origin, 
-        config.destination
-    ).map_err(|error| {
-        throbber.fail("Could not extract the dataset".to_string());
-        error
-    })?;
+        clothings::extract_dataset_from_path(
+            origin,
+            Box::new(config.destination.as_ref().as_ref().to_path_buf()),
+        ).inspect_err(|_error| {
+            throbber.fail("Could not extract the dataset".to_string());
+        })?;
 
-    throbber.success("Repository extracted successfully".to_string());
+        throbber.success("Repository extracted successfully".to_string());
+    }
+
+    {
+        throbber.start_with_msg("Extending data...".to_string());
+
+        extended_clothings::ExtendedClothing::extend_clothing_csv(
+            Box::new(config.destination.as_ref().as_ref().join("data.csv")),
+            config.extra,
+            Box::new(config.destination.as_ref().as_ref().join("data-extension.csv")),
+        ).inspect_err(|_error| {
+            throbber.fail("Could not extend the dataset".to_string());
+        })?;
+
+        throbber.success("Data extended successfully".to_string());
+    }
+
     throbber.end();
 
     Ok(())

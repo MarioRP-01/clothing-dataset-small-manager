@@ -7,7 +7,7 @@ use serde::{Serialize, Deserialize};
 const INR_TO_EUR: f32 = 0.012;
 
 #[derive(Debug, Deserialize)]
-struct MyntraProductCatalog {
+pub(crate) struct MyntraProductCatalog {
     #[serde(rename = "ProductName")]
     name: Arc<str>,
 
@@ -28,7 +28,7 @@ struct MyntraProductCatalog {
 }
 
 #[derive(Debug, Serialize)]
-struct ExtendedClothing {
+pub(crate) struct ExtendedClothing {
     uuid: Arc<str>,
     name: Arc<str>,
     brand: Arc<str>,
@@ -44,7 +44,7 @@ struct ExtendedClothing {
 impl ExtendedClothing {
 
     /// Builds a extended clothing item.
-    pub fn build_from_clothing_and_extension(
+    pub(crate) fn build_from_clothing_and_extension(
         clothing: Clothing,
         extension: MyntraProductCatalog
     ) -> ExtendedClothing {
@@ -64,7 +64,7 @@ impl ExtendedClothing {
     }
 
     /// Extend Clothing with extra data.
-    pub fn extend_clothing_csv(
+    pub(crate) fn extend_clothing_csv(
         csv_clothing: Box<dyn AsRef<Path>>,
         csv_extra_data: Box<dyn AsRef<Path>>,
         destination: Box<dyn AsRef<Path>>
@@ -98,13 +98,6 @@ impl ExtendedClothing {
             .try_for_each(|extended_clothing| {
                 csv_writer.serialize(extended_clothing)
             })?;
-
-        // for clothing in clothings {
-        //     let clothing = clothing?;
-        //     let extension = extra_data.next().unwrap()?;
-        //     let extended_clothing = ExtendedClothing::build_from_clothing_and_extension(clothing, extension);
-        //     csv_writer.serialize(extended_clothing)?;
-        // }
 
         Ok(Box::new(destination.to_owned()))
     }

@@ -4,6 +4,18 @@ The objective of this project is to create a cli tool to manage the [clothing-da
 
 All the commands are strongly attached to the directory structure of the repository. So, if you want to use this tool, you should clone the repository and follow the instructions below.
 
+## How to use
+
+Create a directory called, for example `flat-clothing-dataset-small`.
+
+```sh
+mkdir flat-clothing-dataset-small
+```
+
+```sh
+cargo run -- -d flat-clothing-dataset-small -e resources/extended_clothings.csv
+```
+
 ## Pre-requisites
 
 Before start, you should have **Rust** [installed](https://doc.rust-lang.org/book/ch01-01-installation.html) in your machine. Alternatively, you can create a docker container to compile the application inside it, although currently the repository does not have a Dockerfile to do that.
